@@ -1,11 +1,8 @@
 from itertools import chain
 
-from astroid import (
-    MANAGER, nodes, InferenceError, inference_tip,
-    UseInferenceDefault
-)
-from astroid.nodes import ClassDef, Attribute
-
+from astroid import (MANAGER, InferenceError, UseInferenceDefault, exceptions,
+                     inference_tip, nodes)
+from astroid.nodes import Attribute, ClassDef
 from pylint_django.utils import node_is_subclass
 
 
@@ -114,8 +111,19 @@ def infer_key_classes(node, context=None):
                                        "https://pypi.org/project/pylint-django/!") from exep
 
                 # ensure that module is loaded in astroid_cache, for cases when models is a package
-                if module_name not in MANAGER.astroid_cache:
-                    MANAGER.ast_from_module_name(module_name)
+                for prefix in ['', 'oscar.apps.', 'django.contrib.']:
+                    try:
+                        if prefix + module_name not in MANAGER.astroid_cache:
+                            MANAGER.ast_from_module_name(prefix + module_name)
+                    except exceptions.AstroidImportError:
+                        continue
+                    else:
+                        # We've imported without a crash!
+                        module_name = prefix + module_name
+                        break
+                else:
+                    # We've exhausted the prefixes
+                    raise ImportError(f'Could not import {module_name}')
 
             # create list from dict_values, because it may be modified in a loop
             for module in list(MANAGER.astroid_cache.values()):
