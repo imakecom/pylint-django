@@ -20,10 +20,6 @@ setup(
         'pylint-plugin-utils>=0.5',
         'pylint>=2.0',
     ],
-    extras_require={
-        'with_django': ['Django'],
-        'for_tests': ['django_tables2', 'factory-boy', 'coverage', 'pytest'],
-    },
     license='GPLv2',
     classifiers=[
         'Environment :: Console',
